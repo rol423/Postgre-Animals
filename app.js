@@ -1,26 +1,31 @@
-const pg = require("pg");
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const app = express();
+const pool = require("./db");
+const PORT = process.env.PORT || 8080;
 
-const conString = process.env.DB_URL; //Can be found in the Details page
-const client = new pg.Client({
-  host: process.env.PGHOST,
-  port: 5432,
-  user: process.env.PGUSER,
-  password: process.env.PGPASSWORD,
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(cors());
+
+app.get("/", (req, res) => {
+  res.send("Postgre Animals");
 });
 
-client.connect();
-client.query('SELECT NOW() AS "theTime"', function (err, result) {
-  if (err) {
-    return console.error("could not connect to postgres", err);
+app.get("/animals", async (req, res) => {
+  try {
+    console.log(pool);
+    const { rows } = await pool.query("SELECT * FROM animals");
+    console.log(rows);
+   // res.send("OK");
+    res.json(rows);
+  } catch (err) {
+    console.log(err);
   }
-  console.log(result.rows[0].theTime);
-  // >> output: 2018-08-23T14:02:57.117Z
 });
 
-// client.query("SELECT * FROM animals", function (err, result) {
-//   if (err) {
-//     return console.error("error running query", err);
-//   }
-//   console.log(result);
-//   client.end();
-// });
+
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}`);
+});
